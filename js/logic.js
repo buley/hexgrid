@@ -80,13 +80,16 @@ window.Hexgrid = (function() {
             this.node.appendChild( this.canvas );
             Public.prototype.setup.added = true;
         };
+        this.line_width = 1;
         this.canvas.width = this.node.clientWidth;
         this.canvas.style.width = this.node.clientWidth;
         this.canvas.height = this.node.clientHeight;
         this.canvas.style.height = this.node.clientHeight;
-        this.model = { width: this.width };
-        this.rows = ( this.canvas.height - ( this.canvas.height % ( this.width * 1.5 ) ) ) / ( this.width * 1.5 );
-        this.count = ( ( this.canvas.width - ( 1 * this.width ) ) - ( ( this.canvas.width - ( 1 * this.width ) ) % ( this.width * 1.75 ) ) ) / ( this.width * 1.75 );
+        this.model = { width: this.side };
+        var w = this.canvas.width - this.line_width;
+        var h = this.canvas.height - this.line_width;
+        this.rows = ( h - ( h % ( this.side * 1.5 ) ) ) / ( this.side * 1.5 );
+        this.count = ( ( w - ( 1 * this.side ) ) - ( ( w - ( 1 * this.side ) ) % ( this.side * 1.75 ) ) ) / ( this.side * 1.75 );
     };
     Public.prototype.setup.added = false;
 
@@ -135,7 +138,7 @@ window.Hexgrid = (function() {
         //this.box = ( Math.random() >.3 ) ? true : false;
         this.context.fillStyle = '#EEEEEE';
         this.context.lineStyle = '#000000';
-        this.context.lineWidth = 1;
+        this.context.lineWidth = this.line_width;
         this.context.beginPath();
         this.context.moveTo(xo, yo + ( width - ( .25 * width ) ) );
         var x = 0, xlen = points.length, point;
@@ -150,8 +153,10 @@ window.Hexgrid = (function() {
         if ( true === this.box ) {
 
             //box right
-            this.context.fillStyle = '#ccc';
+
             this.context.beginPath();
+            this.context.lineStyle = '#000000';
+            this.context.lineWidth = this.line_width;
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo(xo, yo + ( width - ( .25 * width ) ) );
             this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
@@ -164,6 +169,8 @@ window.Hexgrid = (function() {
             //box left
             this.context.fillStyle = '#ddd';
             this.context.beginPath();
+            this.context.lineStyle = '#000000';
+            this.context.lineWidth = this.line_width;
             this.context.moveTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
             this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
             this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
@@ -174,6 +181,8 @@ window.Hexgrid = (function() {
 
             //box top
             this.context.fillStyle = '#eee';
+            this.context.lineStyle = '#000000';
+            this.context.lineWidth = this.line_width;
             this.context.beginPath();
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
