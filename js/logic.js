@@ -135,9 +135,10 @@ window.Hexgrid = (function() {
     };
 
     Public.prototype.hexagon = function(points, xo, yo, width) {
-        //this.box = ( Math.random() >.3 ) ? true : false;
-        this.context.fillStyle = '#EEEEEE';
-        this.context.lineStyle = '#000000';
+        //this.box = ( Math.random() >.5 ) ? true : false;
+        //this.threed = ( Math.random() > .7 ) ? true : false;
+        this.context.fillStyle = '#ffffff';
+        this.context.lineStyle = '#ffffff';
         this.context.lineWidth = this.line_width;
         this.context.beginPath();
         this.context.moveTo(xo, yo + ( width - ( .25 * width ) ) );
@@ -153,8 +154,8 @@ window.Hexgrid = (function() {
         if ( true === this.box ) {
 
             //box right
-
             this.context.beginPath();
+            this.context.fillStyle = '#eee';
             this.context.lineStyle = '#000000';
             this.context.lineWidth = this.line_width;
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
@@ -167,8 +168,8 @@ window.Hexgrid = (function() {
             this.context.fill();
 
             //box left
-            this.context.fillStyle = '#ddd';
             this.context.beginPath();
+            this.context.fillStyle = '#ccc';
             this.context.lineStyle = '#000000';
             this.context.lineWidth = this.line_width;
             this.context.moveTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
@@ -180,7 +181,7 @@ window.Hexgrid = (function() {
             this.context.fill();
 
             //box top
-            this.context.fillStyle = '#eee';
+            this.context.fillStyle = '#ddd';
             this.context.lineStyle = '#000000';
             this.context.lineWidth = this.line_width;
             this.context.beginPath();
@@ -189,6 +190,83 @@ window.Hexgrid = (function() {
             this.context.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
             this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
             this.context.closePath();
+            this.context.stroke();
+            this.context.fill();
+
+        } else if ( true === this.threed ) {
+
+            //bottom left
+            //top left
+            this.context.beginPath();
+            this.context.lineStyle = 'transparent';
+            this.context.fillStyle = '#ccc';
+            this.context.lineWidth = this.line_width;
+            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.lineTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
+            this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
+            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.stroke();
+            this.context.fill();
+
+            //left
+            this.context.beginPath();
+            this.context.lineStyle = 'transparent';
+            this.context.lineWidth = this.line_width;
+            this.context.fillStyle = '#ccc';
+            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
+            this.context.lineTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
+            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.stroke();
+            this.context.fill();
+
+
+            //top right
+            this.context.beginPath();
+            this.context.fillStyle = '#ddd';
+            this.context.lineStyle = '#000';
+            this.context.lineWidth = this.line_width;
+            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
+            this.context.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
+            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.fill();
+            this.context.stroke();
+
+
+            //top left
+            this.context.beginPath();
+            this.context.lineStyle = '#000';
+            this.context.fillStyle = '#ddd';
+            this.context.lineWidth = this.line_width;
+            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
+            this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
+            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.stroke();
+            this.context.fill();
+
+            //right
+            this.context.beginPath();
+            this.context.lineStyle = '#000000';
+            this.context.fillStyle = '#eee';
+            this.context.lineWidth = this.line_width;
+            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
+            this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
+            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.stroke();
+            this.context.fill();
+
+            //bottom right
+            this.context.beginPath();
+            this.context.lineStyle = '#000000';
+            this.context.fillStyle = '#eee';
+            this.context.lineWidth = this.line_width;this.line_width
+            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
+            this.context.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
+            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.stroke();
             this.context.fill();
 
