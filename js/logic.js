@@ -220,7 +220,6 @@ window.Hexgrid = (function() {
             this.context.stroke();
             this.context.fill();
 
-
             //top right
             this.context.beginPath();
             this.context.fillStyle = '#ddd';
@@ -232,7 +231,6 @@ window.Hexgrid = (function() {
             this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.fill();
             this.context.stroke();
-
 
             //top left
             this.context.beginPath();
