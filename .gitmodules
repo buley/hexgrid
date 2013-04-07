@@ -1,0 +1,15 @@
+[submodule "vendor/isotope"]
+	path = vendor/isotope
+	url = https://github.com/desandro/isotope.git
+[submodule "vendor/cssgrid"]
+	path = vendor/cssgrid
+	url = https://github.com/andytlr/cssgrid.git
+[submodule "vendor/unsemantic"]
+	path = vendor/unsemantic
+	url = https://github.com/nathansmith/unsemantic.git
+[submodule "vendor/masonry"]
+	path = vendor/masonry
+	url = https://github.com/desandro/masonry.git
+[submodule "vendor/wookmark"]
+	path = vendor/wookmark
+	url = https://github.com/GBKS/Wookmark-jQuery.git
