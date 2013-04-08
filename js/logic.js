@@ -20,6 +20,47 @@ window.Hexgrid = (function() {
     Trig.degreesToRadians = function( a ) {
         return a * (Math.PI / 180);
     };
+    Trig.dotProduct = function( a, b ) {
+        var n = 0, lim = Math.min(a.length,b.length);
+        for (var i = 0; i < lim; i++) n += a[i] * b[i];
+        return n;
+    };
+    Trig.crossProduct = function( a, b ) {
+
+    };
+
+    //Barycentric coordinate method
+    //background: http://www.blackpawn.com/texts/pointinpoly/default.html
+    //via http://koozdra.wordpress.com/2012/06/27/javascript-is-point-in-triangle/
+    Trig.is_in_triangle = function ( px, py, ax, ay, bx, by, cx, cy ) {
+
+        var v0 = [cx-ax,cy-ay];
+        var v1 = [bx-ax,by-ay];
+        var v2 = [px-ax,py-ay];
+
+        var dot00 = (v0[0]*v0[0]) + (v0[1]*v0[1]);
+        var dot01 = (v0[0]*v1[0]) + (v0[1]*v1[1]);
+        var dot02 = (v0[0]*v2[0]) + (v0[1]*v2[1]);
+        var dot11 = (v1[0]*v1[0]) + (v1[1]*v1[1]);
+        var dot12 = (v1[0]*v2[0]) + (v1[1]*v2[1]);
+
+        var invDenom = 1/ (dot00 * dot11 - dot01 * dot01);
+
+        var u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+        var v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+        return ((u >= 0) && (v >= 0) && (u + v < 1));
+    }
+
+    Trig.sameSide = function( p1, p2, a, b ) {
+        cp1 = Trig.crossProduct( b - a, p1 - a );
+        cp2 = Trig.crossProduct( b - a, p2 - a );
+        if ( Trig.dotProduct( cp1, cp2 ) >= 0 ) {
+            return true;
+        } else {
+            return false;
+        }
+    };
 
     /* Hexagon */
     var _sin_60 = Math.sin( Trig.degreesToRadians( 60 ) );
@@ -61,6 +102,96 @@ window.Hexgrid = (function() {
     Hexagon.prototype.seven = function() { return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.c - ( 2 * this.a ) ) ) ] };
     Hexagon.prototype.eight = function() { return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.a ) ) ]; };
 
+    Hexagon.prototype.hit = function(x, y) {
+        var points = this.points();
+        var result = false;
+        if (
+            x > points[ 1 ][ 0 ]
+            && x < points[ 3 ][ 0 ]
+            && y > points[ 1 ][ 1 ]
+            && y < points[ 4 ][ 1 ]
+        ) {
+            result = true;
+        } else if (
+            x > points[ 0 ][ 0 ]
+            && x < points[ 4 ][ 0 ]
+            && y > points[ 2 ][ 1 ]
+            && y < points[ 5 ][ 1 ]
+        ) {
+            if ( y > points[ 4 ][ 1 ] ) {
+                if (
+                    x > points[ 0 ][ 0 ]
+                    && x < points[ 5 ][ 0 ]
+                ) {
+                    //bottom left
+                    log('bottom left');
+                    result = Trig.is_in_triangle(
+                        x
+                        , y
+                        , points[ 0 ][ 0 ]
+                        , points[ 0 ][ 1 ]
+                        , points[ 5 ][ 0 ]
+                        , points[ 5 ][ 1 ]
+                        , points[ 5 ][ 0 ]
+                        , points[ 5 ][ 1 ] - this.a
+                    );
+                } else if (
+                    x > points[ 5 ][ 0 ]
+                    && x < points[ 4 ][ 0 ]
+                ) {
+                    //bottom right
+                    log('bottom right');
+                    result = Trig.is_in_triangle(
+                        x
+                        , y
+                        , points[ 4 ][ 0 ]
+                        , points[ 4 ][ 1 ]
+                        , points[ 5 ][ 0 ]
+                        , points[ 5 ][ 1 ]
+                        , points[ 5 ][ 0 ]
+                        , points[ 5 ][ 1 ] - this.a
+                    );
+                }
+            } else if ( y < points[ 3 ][ 1 ] ) {
+
+                if (
+                    x > points[ 0 ][ 0 ]
+                    && x < points[ 5 ][ 0 ]
+                ) {
+                    //top left
+                    log('top left');
+                    result = Trig.is_in_triangle(
+                        x
+                        , y
+                        , points[ 1 ][ 0 ]
+                        , points[ 1 ][ 1 ]
+                        , points[ 2 ][ 0 ]
+                        , points[ 2 ][ 1 ]
+                        , points[ 2 ][ 0 ]
+                        , points[ 2 ][ 1 ] + this.a
+                    );
+                } else if (
+                    x > points[ 5 ][ 0 ]
+                    && x < points[ 4 ][ 0 ]
+                ) {
+                    //top right
+                    log('top right');
+                    result = Trig.is_in_triangle(
+                        x
+                        , y
+                        , points[ 3 ][ 0 ]
+                        , points[ 3 ][ 1 ]
+                        , points[ 2 ][ 0 ]
+                        , points[ 2 ][ 1 ]
+                        , points[ 2 ][ 0 ]
+                        , points[ 2 ][ 1 ] + this.a
+                    );
+                }
+            }
+        }
+        return result;
+    };
+
     /* Public */
     var Public = function (args) {
         var attr;
@@ -71,6 +202,24 @@ window.Hexgrid = (function() {
         var that = this;
         [ this.setup, this.create, this.draw ].forEach( function( fn ) { fn.apply( that, [] ); } );
     };
+    Public.prototype.click = function(e) {
+        log('click', e.clientX, e.clientY);
+        var clickX = e.clientX, clickY = e.clientY;
+        var x = 0, xlen = this.grid.length, row;
+        for( ; x < xlen ; x += 1 ) {
+            row = this.grid[ x ];
+            if ( clickY > row[0].yoffset() && clickY < row[0].yoffset() + row[0].width()  ) {
+                var y = 0, ylen = row.length, item;
+                for ( ; y < ylen ; y += 1 ) {
+                    item = row[ y ];
+                    if( true === item.hit( clickX, clickY ) ) {
+                        log("CLICKED",item);
+                    }
+                }
+            }
+        }
+    };
+
     Public.prototype.setup = function() {
         this.node = document.getElementById( this.id );
         if ( ! Public.prototype.setup.added  ) {
@@ -130,6 +279,7 @@ window.Hexgrid = (function() {
         if ( ! Public.prototype.draw.added ) {
             var that = this;
             window.addEventListener( 'resize', function() { that.run.apply( that, arguments ); } );
+            this.canvas.addEventListener( 'click', function() { that.click.apply( that, arguments ); } );
             Public.prototype.draw.added = true;
         }
     };
@@ -138,7 +288,7 @@ window.Hexgrid = (function() {
         //this.box = ( Math.random() >.5 ) ? true : false;
         //this.threed = ( Math.random() > .7 ) ? true : false;
         this.context.fillStyle = '#ffffff';
-        this.context.lineStyle = '#ffffff';
+        this.context.lineStyle = '#000000';
         this.context.lineWidth = this.line_width;
         this.context.beginPath();
         this.context.moveTo(xo, yo + ( width - ( .25 * width ) ) );
@@ -264,7 +414,7 @@ window.Hexgrid = (function() {
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
             this.context.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.stroke();
             this.context.fill();
 
