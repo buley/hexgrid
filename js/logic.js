@@ -32,7 +32,7 @@ window.Hexgrid = (function() {
     //Barycentric coordinate method
     //background: http://www.blackpawn.com/texts/pointinpoly/default.html
     //via http://koozdra.wordpress.com/2012/06/27/javascript-is-point-in-triangle/
-    Trig.is_in_triangle = function ( px, py, ax, ay, bx, by, cx, cy ) {
+    Trig.insideTriangle = function ( px, py, ax, ay, bx, by, cx, cy ) {
 
         var v0 = [cx-ax,cy-ay];
         var v1 = [bx-ax,by-ay];
@@ -106,9 +106,9 @@ window.Hexgrid = (function() {
         var points = this.points();
         var result = false;
         if (
-            x > points[ 1 ][ 0 ]
+            x >= points[ 1 ][ 0 ]
             && x < points[ 3 ][ 0 ]
-            && y > points[ 1 ][ 1 ]
+            && y >= points[ 1 ][ 1 ]
             && y < points[ 4 ][ 1 ]
         ) {
             result = true;
@@ -124,8 +124,7 @@ window.Hexgrid = (function() {
                     && x < points[ 5 ][ 0 ]
                 ) {
                     //bottom left
-                    log('bottom left');
-                    result = Trig.is_in_triangle(
+                    result = Trig.insideTriangle(
                         x
                         , y
                         , points[ 0 ][ 0 ]
@@ -140,8 +139,7 @@ window.Hexgrid = (function() {
                     && x < points[ 4 ][ 0 ]
                 ) {
                     //bottom right
-                    log('bottom right');
-                    result = Trig.is_in_triangle(
+                    result = Trig.insideTriangle(
                         x
                         , y
                         , points[ 4 ][ 0 ]
@@ -159,8 +157,7 @@ window.Hexgrid = (function() {
                     && x < points[ 5 ][ 0 ]
                 ) {
                     //top left
-                    log('top left');
-                    result = Trig.is_in_triangle(
+                    result = Trig.insideTriangle(
                         x
                         , y
                         , points[ 1 ][ 0 ]
@@ -175,8 +172,7 @@ window.Hexgrid = (function() {
                     && x < points[ 4 ][ 0 ]
                 ) {
                     //top right
-                    log('top right');
-                    result = Trig.is_in_triangle(
+                    result = Trig.insideTriangle(
                         x
                         , y
                         , points[ 3 ][ 0 ]
@@ -203,7 +199,6 @@ window.Hexgrid = (function() {
         [ this.setup, this.create, this.draw ].forEach( function( fn ) { fn.apply( that, [] ); } );
     };
     Public.prototype.click = function(e) {
-        log('click', e.clientX, e.clientY);
         var clickX = e.clientX, clickY = e.clientY;
         var x = 0, xlen = this.grid.length, row;
         for( ; x < xlen ; x += 1 ) {
@@ -213,7 +208,13 @@ window.Hexgrid = (function() {
                 for ( ; y < ylen ; y += 1 ) {
                     item = row[ y ];
                     if( true === item.hit( clickX, clickY ) ) {
-                        log("CLICKED",item);
+                        if ( 'function' === typeof this.onclick ) {
+                            this.onclick( {
+                                row: x
+                                , column: ( y + 1 )
+                                , data: item
+                            } );
+                        }
                     }
                 }
             }
