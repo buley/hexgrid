@@ -102,6 +102,11 @@ window.Hexgrid = (function() {
     Hexagon.prototype.seven = function() { return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.c - ( 2 * this.a ) ) ) ] };
     Hexagon.prototype.eight = function() { return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.a ) ) ]; };
 
+    //we know you've clicked inside
+    //the hexagon if either 1) you've clicked in the main rectangle (easy)
+    //or in the upper or lower triangles (ungodly difficult for math mortals)
+    //trading off speed for simplicity: the time it would take to figure to figure out which triangle to check didn't beat
+    //just checking both traignels
     Hexagon.prototype.hit = function(x, y) {
         var points = this.points();
         var result = false;
@@ -112,77 +117,32 @@ window.Hexgrid = (function() {
             && y < points[ 4 ][ 1 ]
         ) {
             result = true;
-        } else if (
-            x > points[ 0 ][ 0 ]
-            && x < points[ 4 ][ 0 ]
-            && y > points[ 2 ][ 1 ]
-            && y < points[ 5 ][ 1 ]
-        ) {
-            if ( y > points[ 4 ][ 1 ] ) {
-                if (
-                    x > points[ 0 ][ 0 ]
-                    && x < points[ 5 ][ 0 ]
-                ) {
-                    //bottom left
-                    result = Trig.insideTriangle(
-                        x
-                        , y
-                        , points[ 0 ][ 0 ]
-                        , points[ 0 ][ 1 ]
-                        , points[ 5 ][ 0 ]
-                        , points[ 5 ][ 1 ]
-                        , points[ 5 ][ 0 ]
-                        , points[ 5 ][ 1 ] - this.a
-                    );
-                } else if (
-                    x > points[ 5 ][ 0 ]
-                    && x < points[ 4 ][ 0 ]
-                ) {
-                    //bottom right
-                    result = Trig.insideTriangle(
-                        x
-                        , y
-                        , points[ 4 ][ 0 ]
-                        , points[ 4 ][ 1 ]
-                        , points[ 5 ][ 0 ]
-                        , points[ 5 ][ 1 ]
-                        , points[ 5 ][ 0 ]
-                        , points[ 5 ][ 1 ] - this.a
-                    );
-                }
-            } else if ( y < points[ 3 ][ 1 ] ) {
-
-                if (
-                    x > points[ 0 ][ 0 ]
-                    && x < points[ 5 ][ 0 ]
-                ) {
-                    //top left
-                    result = Trig.insideTriangle(
-                        x
-                        , y
-                        , points[ 1 ][ 0 ]
-                        , points[ 1 ][ 1 ]
-                        , points[ 2 ][ 0 ]
-                        , points[ 2 ][ 1 ]
-                        , points[ 2 ][ 0 ]
-                        , points[ 2 ][ 1 ] + this.a
-                    );
-                } else if (
-                    x > points[ 5 ][ 0 ]
-                    && x < points[ 4 ][ 0 ]
-                ) {
-                    //top right
-                    result = Trig.insideTriangle(
-                        x
-                        , y
-                        , points[ 3 ][ 0 ]
-                        , points[ 3 ][ 1 ]
-                        , points[ 2 ][ 0 ]
-                        , points[ 2 ][ 1 ]
-                        , points[ 2 ][ 0 ]
-                        , points[ 2 ][ 1 ] + this.a
-                    );
-                }
+        } else {
+            //bottom left
+            //bottom right
+            result = Trig.insideTriangle(
+                x
+                , y
+                , points[ 0 ][ 0 ]
+                , points[ 0 ][ 1 ]
+                , points[ 5 ][ 0 ]
+                , points[ 5 ][ 1 ]
+                , points[ 4 ][ 0 ]
+                , points[ 4 ][ 1 ]
+            );
+            //top right
+            //top left
+            if ( false === result ) {
+                result = Trig.insideTriangle(
+                    x
+                    , y
+                    , points[ 1 ][ 0 ]
+                    , points[ 1 ][ 1 ]
+                    , points[ 2 ][ 0 ]
+                    , points[ 2 ][ 1 ]
+                    , points[ 3 ][ 0 ]
+                    , points[ 3 ][ 1 ]
+                );
             }
         }
         return result;
@@ -230,7 +190,8 @@ window.Hexgrid = (function() {
             this.node.appendChild( this.canvas );
             Public.prototype.setup.added = true;
         };
-        this.line_width = 1;
+        this.line_width = this.line.width;
+        this.line_style = this.line.color;
         this.canvas.width = this.node.clientWidth;
         this.canvas.style.width = this.node.clientWidth;
         this.canvas.height = this.node.clientHeight;
@@ -274,7 +235,7 @@ window.Hexgrid = (function() {
             y = 0;
             for ( ; y < rowlen; y += 1 ) {
                 hex = row[ y ];
-                this.hexagon( hex.points(), hex.xoffset(), hex.yoffset(), hex.width() );
+                this.hexagon( hex );
             }
         }
         if ( ! Public.prototype.draw.added ) {
@@ -285,12 +246,13 @@ window.Hexgrid = (function() {
         }
     };
 
-    Public.prototype.hexagon = function(points, xo, yo, width) {
+    Public.prototype.hexagon = function( hex ) {
+        var points = hex.points(), xo = hex.xoffset(), yo = hex.yoffset(), width = hex.width();
         //this.box = ( Math.random() >.5 ) ? true : false;
         //this.threed = ( Math.random() > .7 ) ? true : false;
         this.context.fillStyle = '#ffffff';
-        this.context.lineStyle = '#000000';
-        this.context.lineWidth = this.line_width;
+        this.context.lineStyle = this.line.color;
+        this.context.lineWidth = this.line.width;
         this.context.beginPath();
         this.context.moveTo(xo, yo + ( width - ( .25 * width ) ) );
         var x = 0, xlen = points.length, point;
@@ -307,8 +269,8 @@ window.Hexgrid = (function() {
             //box right
             this.context.beginPath();
             this.context.fillStyle = '#eee';
-            this.context.lineStyle = '#000000';
-            this.context.lineWidth = this.line_width;
+            this.context.lineStyle = this.line.color;
+            this.context.lineWidth = this.line.width;
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo(xo, yo + ( width - ( .25 * width ) ) );
             this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
@@ -321,8 +283,8 @@ window.Hexgrid = (function() {
             //box left
             this.context.beginPath();
             this.context.fillStyle = '#ccc';
-            this.context.lineStyle = '#000000';
-            this.context.lineWidth = this.line_width;
+            this.context.lineStyle = this.line.color;
+            this.context.lineWidth = this.line.width;
             this.context.moveTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
             this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
             this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
@@ -333,8 +295,8 @@ window.Hexgrid = (function() {
 
             //box top
             this.context.fillStyle = '#ddd';
-            this.context.lineStyle = '#000000';
-            this.context.lineWidth = this.line_width;
+            this.context.lineStyle = this.line.color;
+            this.context.lineWidth = this.line.width;
             this.context.beginPath();
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
@@ -351,7 +313,7 @@ window.Hexgrid = (function() {
             this.context.beginPath();
             this.context.lineStyle = 'transparent';
             this.context.fillStyle = '#ccc';
-            this.context.lineWidth = this.line_width;
+            this.context.lineWidth = this.line.width;
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
             this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
@@ -362,7 +324,7 @@ window.Hexgrid = (function() {
             //left
             this.context.beginPath();
             this.context.lineStyle = 'transparent';
-            this.context.lineWidth = this.line_width;
+            this.context.lineWidth = this.line.width;
             this.context.fillStyle = '#ccc';
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
@@ -375,7 +337,7 @@ window.Hexgrid = (function() {
             this.context.beginPath();
             this.context.fillStyle = '#ddd';
             this.context.lineStyle = '#000';
-            this.context.lineWidth = this.line_width;
+            this.context.lineWidth = this.line.width;
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
             this.context.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
@@ -387,7 +349,7 @@ window.Hexgrid = (function() {
             this.context.beginPath();
             this.context.lineStyle = '#000';
             this.context.fillStyle = '#ddd';
-            this.context.lineWidth = this.line_width;
+            this.context.lineWidth = this.line.width;
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
             this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
@@ -397,9 +359,9 @@ window.Hexgrid = (function() {
 
             //right
             this.context.beginPath();
-            this.context.lineStyle = '#000000';
+            this.context.lineStyle = this.line.color;
             this.context.fillStyle = '#eee';
-            this.context.lineWidth = this.line_width;
+            this.context.lineWidth = this.line.width;
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
             this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
@@ -409,9 +371,9 @@ window.Hexgrid = (function() {
 
             //bottom right
             this.context.beginPath();
-            this.context.lineStyle = '#000000';
+            this.context.lineStyle = this.line.color;
             this.context.fillStyle = '#eee';
-            this.context.lineWidth = this.line_width;this.line_width
+            this.context.lineWidth = this.line.width;
             this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
             this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
             this.context.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
@@ -419,6 +381,9 @@ window.Hexgrid = (function() {
             this.context.stroke();
             this.context.fill();
 
+        }
+        if ( 'function' === typeof this.ondraw ) {
+            this.ondraw( { data: hex } );
         }
 
     };

@@ -17,10 +17,12 @@
         , side: 50
         , fill: '#000000'
         , line: {
-            width: 3
+            width: 1
             , color: '#ffffff'
         }, onclick: function( obj ) {
             console.log('CLICK', obj );
+        }, ondraw: function( obj ) {
+            console.log('DRAW', obj );
         }
     });
 })();
