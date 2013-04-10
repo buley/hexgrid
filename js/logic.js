@@ -89,7 +89,6 @@ window.Hexgrid = (function() {
             , this.five()
             , this.six()
             , this.seven()
-            , this.eight()
         ];
     };
     /*x,y*/
@@ -147,6 +146,78 @@ window.Hexgrid = (function() {
         }
         return result;
     };
+    /* API */
+    var that = this;
+    var API = function(hexagon, canvas, context) {
+      this.hexagon = hexagon;
+        this.context = context;
+        this.canvas = canvas;
+    };
+    API.prototype.image = function( options ) {
+        if ( 'undefined' === typeof options ) {
+          return;
+        }
+        var src = options.src
+            , xPt = options.x
+            , yPt = options.y
+            , width = options.width
+            , height = options.height
+            , clip = options.clip || {}
+            , clipX = clip.x
+            , clipY = clip.y
+            , clipWidth = clip.width
+            , clipHeight = clip.height;
+        var img = new Image();
+        if ( 'undefined' === typeof xPt ) {
+            log("XEMPTY", yPt );
+        }
+        img.src = src;
+        var api = this;
+        img.onload = function() {
+            //standard
+            var ctx = api.context;
+            var pts = api.hexagon.points(), x = 1, ptct = pts.length, pt;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo( pts[ 0 ][ 0 ], pts[ 0 ][ 1 ] );
+            for ( ; x < 6 ; x += 1 ) {
+                pt = pts[ x ];
+                ctx.lineTo( pts[ x ][ 0 ], pts[ x ][ 1 ] );
+            }
+            ctx.closePath();
+            ctx.clip();
+            if ( 'undefined' !== typeof clip ) {
+                //sliced images
+                //api.context.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                ctx.drawImage(img, xPt, yPt, width, height, clipX, clipY, clipWidth, clipHeight );
+            } else if ( 'undefined' !== typeof width ) {
+                //scaled images
+                //api.context.drawImage(img, x, y, width, height);
+                ctx.drawImage(img, xPt, yPt, width, height );
+            } else {
+                ctx.drawImage(img, xPt, yPt );
+            }
+
+            ctx.beginPath();
+            ctx.lineStyle = '#660000';
+            ctx.moveTo( pts[ 0 ][ 0 ], pts[ 0 ][ 1 ] );
+            for ( ; x < 6 ; x += 1 ) {
+                pt = pts[ x ];
+                ctx.lineTo( pts[ x ][ 0 ], pts[ x ][ 1 ] );
+            }
+            ctx.closePath();
+            ctx.clip();
+            ctx.restore();
+
+        };
+
+    };
+    API.prototype.video = function( src, resize ) {
+        if ( 'undefined' === typeof resize ) {
+            resize = false;
+        }
+    };
 
     /* Public */
     var Public = function (args) {
@@ -158,7 +229,7 @@ window.Hexgrid = (function() {
         var that = this;
         [ this.setup, this.create, this.draw ].forEach( function( fn ) { fn.apply( that, [] ); } );
     };
-    Public.prototype.click = function(e) {
+    Public.prototype.detect = function(e, handler) {
         var clickX = e.clientX, clickY = e.clientY;
         var x = 0, xlen = this.grid.length, row;
         for( ; x < xlen ; x += 1 ) {
@@ -168,11 +239,12 @@ window.Hexgrid = (function() {
                 for ( ; y < ylen ; y += 1 ) {
                     item = row[ y ];
                     if( true === item.hit( clickX, clickY ) ) {
-                        if ( 'function' === typeof this.onclick ) {
-                            this.onclick( {
+                        if ( 'function' === typeof handler ) {
+                            handler( {
                                 row: x
                                 , column: ( y + 1 )
                                 , data: item
+                                , api: new API( item, this.canvas, this.context)
                             } );
                         }
                     }
@@ -181,6 +253,32 @@ window.Hexgrid = (function() {
         }
     };
 
+    Public.prototype.mousemove = function(e) {
+        var that = this;
+        this.detect(e, function(d) {
+            var data = d.data;
+            if ( 'undefined' !== typeof that.previous ) {
+                if( that.previous.data !== data ) {
+                    if ( 'function' === typeof that.onmouseout ) {
+                        that.onmouseout( that.previous );
+                    }
+                    if ( 'function' === typeof that.onmouseover ) {
+                        that.onmouseover( d );
+                    }
+                }
+            }
+            that.previous = d;
+        });
+    };
+    Public.prototype.click = function(e) {
+        this.detect(e, this.onclick);
+    };
+    Public.prototype.mouseover = function(e) {
+        this.detect(e, this.onmouseover);
+    };
+    Public.prototype.mouseout = function(e) {
+        this.detect(e, this.onmouseout);
+    };
     Public.prototype.setup = function() {
         this.node = document.getElementById( this.id );
         if ( ! Public.prototype.setup.added  ) {
@@ -196,6 +294,7 @@ window.Hexgrid = (function() {
         this.canvas.style.width = this.node.clientWidth;
         this.canvas.height = this.node.clientHeight;
         this.canvas.style.height = this.node.clientHeight;
+        this.bounds = this.canvas.getBoundingClientRect();
         this.model = { width: this.side };
         var w = this.canvas.width - this.line_width;
         var h = this.canvas.height - this.line_width;
@@ -218,6 +317,12 @@ window.Hexgrid = (function() {
                     } else {
                         xoffset = idx * ( 1.75 * this.model.width );
                     }
+                }
+                if ('undefined' === typeof xoffset || xoffset < 0 ) {
+                    xoffset = 0;
+                }
+                if ('undefined' === typeof yoffset || yoffset < 0 ) {
+                    yoffset = 0;
                 }
                 var hex = new Hexagon( width, xoffset, yoffset );
                 hexagons.push( hex );
@@ -242,6 +347,7 @@ window.Hexgrid = (function() {
             var that = this;
             window.addEventListener( 'resize', function() { that.run.apply( that, arguments ); } );
             this.canvas.addEventListener( 'click', function() { that.click.apply( that, arguments ); } );
+            this.canvas.addEventListener( 'mousemove', function() { that.mousemove.apply( that, arguments ); } );
             Public.prototype.draw.added = true;
         }
     };
@@ -383,7 +489,7 @@ window.Hexgrid = (function() {
 
         }
         if ( 'function' === typeof this.ondraw ) {
-            this.ondraw( { data: hex } );
+            this.ondraw( { data: hex, api: new API( hex, this.canvas, this.context ) } );
         }
 
     };

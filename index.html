@@ -12,17 +12,57 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript">
 (function() {
-    hexgrid = new Hexgrid( {
+    var hexgrid = new Hexgrid( {
         id: 'hexgrid'
         , side: 50
         , fill: '#000000'
         , line: {
             width: 1
             , color: '#ffffff'
-        }, onclick: function( obj ) {
-            console.log('CLICK', obj );
         }, ondraw: function( obj ) {
-            console.log('DRAW', obj );
+        }, onmouseout: function( obj ) {
+            console.log('mouseout',obj);
+        }, onmouseover: function( obj ) {
+            console.log('mouseover',obj);
+            var api = obj.api
+                    , hex = obj.data;
+            api.image( {
+                src: 'http://www.parade.com/wp-content/uploads/2013/04/dory-ftr-1024x640.jpg'
+                , clip: { x: hex.xoffset(), y: hex.yoffset(), width: hex.width(), height: hex.width() }
+                , x: hex.xoffset()
+                , y: hex.yoffset()
+                , width: hex.width()
+                , height: hex.width()
+            } );
+        }, onclick: function( obj ) {
+            var api = obj.api;
+            var hex = obj.data;
+            /* normal */
+            /*
+            api.image( {
+                src: 'http://www.parade.com/wp-content/uploads/2013/04/dory-ftr-1024x640.jpg'
+                , x: hex.xoffset()
+                , y: hex.yoffset()
+            } );*/
+            /* resize */
+            /*
+            api.image( {
+                src: 'http://www.parade.com/wp-content/uploads/2013/04/dory-ftr-1024x640.jpg'
+                , clip: { x: 0, y: 0, width: 0, height: 0 }
+                , x: hex.xoffset()
+                , y: hex.yoffset()
+                , width: hex.width()
+                , height: hex.width()
+            } );*/
+            /* clip */
+            api.image( {
+                src: 'http://www.parade.com/wp-content/uploads/2013/04/dory-ftr-1024x640.jpg'
+                , clip: { x: hex.xoffset(), y: hex.yoffset(), width: hex.width(), height: hex.width() }
+                , x: hex.xoffset()
+                , y: hex.yoffset()
+                , width: hex.width()
+                , height: hex.width()
+            } );
         }
     });
 })();
