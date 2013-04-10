@@ -71,6 +71,142 @@ window.Hexgrid = (function() {
         this.xo = x;
         this.yo = y;
     };
+    Hexagon.prototype.draw = function( ctx, type, line_color, line_width) {
+
+        var xo = this.xo, yo = this.yo, width = this.width;
+        ctx.fillStyle = '#ffffff';
+        ctx.lineStyle = line_color;
+        ctx.lineWidth = line_width;
+        ctx.beginPath();
+        ctx.moveTo(xo, yo + ( width - ( .25 * width ) ) );
+        var x = 0, points = this.points(), xlen = points.length, point;
+        for ( ; x < 6 ; x += 1 ) {
+            point = points[ x ];
+            ctx.lineTo( point[ 0 ], point[ 1 ] );
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        if ( 'box' === type ) {
+
+            //box right
+            ctx.beginPath();
+            ctx.fillStyle = '#eee';
+            ctx.lineStyle = line_color;
+            ctx.lineWidth = line_width;
+            ctx.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo(xo, yo + ( width - ( .25 * width ) ) );
+            ctx.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
+            ctx.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
+            ctx.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+
+            //box left
+            ctx.beginPath();
+            ctx.fillStyle = '#ccc';
+            ctx.lineStyle = line_color;
+            ctx.lineWidth = line_width;
+            ctx.moveTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
+            ctx.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
+            ctx.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+
+            //box top
+            ctx.fillStyle = '#ddd';
+            ctx.lineStyle = line_color;
+            ctx.lineWidth = line_width;
+            ctx.beginPath();
+            ctx.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
+            ctx.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
+            ctx.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+
+        } else if ( '3d' === type ) {
+
+            //bottom left
+            //top left
+            ctx.beginPath();
+            ctx.lineStyle = 'transparent';
+            ctx.fillStyle = '#ccc';
+            ctx.lineWidth = line_width;
+            ctx.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
+            ctx.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
+            ctx.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.stroke();
+            ctx.fill();
+
+            //left
+            ctx.beginPath();
+            ctx.lineStyle = 'transparent';
+            ctx.lineWidth = line_width;
+            ctx.fillStyle = '#ccc';
+            ctx.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
+            ctx.lineTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
+            ctx.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.stroke();
+            ctx.fill();
+
+            //top right
+            ctx.beginPath();
+            ctx.fillStyle = '#ddd';
+            ctx.lineStyle = '#000';
+            ctx.lineWidth = line_width;
+            ctx.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
+            ctx.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
+            ctx.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.fill();
+            ctx.stroke();
+
+            //top left
+            ctx.beginPath();
+            ctx.lineStyle = '#000';
+            ctx.fillStyle = '#ddd';
+            ctx.lineWidth = line_width;
+            ctx.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
+            ctx.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
+            ctx.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.stroke();
+            ctx.fill();
+
+            //right
+            ctx.beginPath();
+            ctx.lineStyle = line_color;
+            ctx.fillStyle = '#eee';
+            ctx.lineWidth = line_width;
+            ctx.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
+            ctx.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
+            ctx.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.stroke();
+            ctx.fill();
+
+            //bottom right
+            ctx.beginPath();
+            ctx.lineStyle = line_color;
+            ctx.fillStyle = '#eee';
+            ctx.lineWidth = line_width;
+            ctx.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
+            ctx.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
+            ctx.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
+            ctx.stroke();
+            ctx.fill();
+
+        }
+    }
     Hexagon.prototype.xoffset = function() {
        return this.xo;
     };
@@ -168,9 +304,6 @@ window.Hexgrid = (function() {
             , clipWidth = clip.width
             , clipHeight = clip.height;
         var img = new Image();
-        if ( 'undefined' === typeof xPt ) {
-            log("XEMPTY", yPt );
-        }
         img.src = src;
         var api = this;
         img.onload = function() {
@@ -187,27 +320,21 @@ window.Hexgrid = (function() {
             }
             ctx.closePath();
             ctx.clip();
-            if ( 'undefined' !== typeof clip ) {
+            if ( 'undefined' !== typeof clipWidth ) {
                 //sliced images
+                log('1', clip);
                 //api.context.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
                 ctx.drawImage(img, xPt, yPt, width, height, clipX, clipY, clipWidth, clipHeight );
             } else if ( 'undefined' !== typeof width ) {
                 //scaled images
+                log('2');
                 //api.context.drawImage(img, x, y, width, height);
                 ctx.drawImage(img, xPt, yPt, width, height );
             } else {
+                log('3');
                 ctx.drawImage(img, xPt, yPt );
             }
 
-            ctx.beginPath();
-            ctx.lineStyle = '#660000';
-            ctx.moveTo( pts[ 0 ][ 0 ], pts[ 0 ][ 1 ] );
-            for ( ; x < 6 ; x += 1 ) {
-                pt = pts[ x ];
-                ctx.lineTo( pts[ x ][ 0 ], pts[ x ][ 1 ] );
-            }
-            ctx.closePath();
-            ctx.clip();
             ctx.restore();
 
         };
@@ -356,138 +483,9 @@ window.Hexgrid = (function() {
         var points = hex.points(), xo = hex.xoffset(), yo = hex.yoffset(), width = hex.width();
         //this.box = ( Math.random() >.5 ) ? true : false;
         //this.threed = ( Math.random() > .7 ) ? true : false;
-        this.context.fillStyle = '#ffffff';
-        this.context.lineStyle = this.line.color;
-        this.context.lineWidth = this.line.width;
-        this.context.beginPath();
-        this.context.moveTo(xo, yo + ( width - ( .25 * width ) ) );
-        var x = 0, xlen = points.length, point;
-        for ( ; x < 6 ; x += 1 ) {
-            point = points[ x ];
-            this.context.lineTo( point[ 0 ], point[ 1 ] );
-        }
-        this.context.closePath();
-        this.context.fill();
-        this.context.stroke();
+        var boxtype = 'normal';
+        hex.draw( this.context, boxtype, this.line.color, this.line.width );
 
-        if ( true === this.box ) {
-
-            //box right
-            this.context.beginPath();
-            this.context.fillStyle = '#eee';
-            this.context.lineStyle = this.line.color;
-            this.context.lineWidth = this.line.width;
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo(xo, yo + ( width - ( .25 * width ) ) );
-            this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
-            this.context.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
-            this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
-            this.context.closePath();
-            this.context.stroke();
-            this.context.fill();
-
-            //box left
-            this.context.beginPath();
-            this.context.fillStyle = '#ccc';
-            this.context.lineStyle = this.line.color;
-            this.context.lineWidth = this.line.width;
-            this.context.moveTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
-            this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
-            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
-            this.context.closePath();
-            this.context.stroke();
-            this.context.fill();
-
-            //box top
-            this.context.fillStyle = '#ddd';
-            this.context.lineStyle = this.line.color;
-            this.context.lineWidth = this.line.width;
-            this.context.beginPath();
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
-            this.context.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
-            this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
-            this.context.closePath();
-            this.context.stroke();
-            this.context.fill();
-
-        } else if ( true === this.threed ) {
-
-            //bottom left
-            //top left
-            this.context.beginPath();
-            this.context.lineStyle = 'transparent';
-            this.context.fillStyle = '#ccc';
-            this.context.lineWidth = this.line.width;
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
-            this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
-            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.stroke();
-            this.context.fill();
-
-            //left
-            this.context.beginPath();
-            this.context.lineStyle = 'transparent';
-            this.context.lineWidth = this.line.width;
-            this.context.fillStyle = '#ccc';
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
-            this.context.lineTo( points[ 0 ][ 0 ], points[ 0 ][ 1 ] );
-            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.stroke();
-            this.context.fill();
-
-            //top right
-            this.context.beginPath();
-            this.context.fillStyle = '#ddd';
-            this.context.lineStyle = '#000';
-            this.context.lineWidth = this.line.width;
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
-            this.context.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
-            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.fill();
-            this.context.stroke();
-
-            //top left
-            this.context.beginPath();
-            this.context.lineStyle = '#000';
-            this.context.fillStyle = '#ddd';
-            this.context.lineWidth = this.line.width;
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo( points[ 2 ][ 0 ], points[ 2 ][ 1 ] );
-            this.context.lineTo( points[ 1 ][ 0 ], points[ 1 ][ 1 ] );
-            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.stroke();
-            this.context.fill();
-
-            //right
-            this.context.beginPath();
-            this.context.lineStyle = this.line.color;
-            this.context.fillStyle = '#eee';
-            this.context.lineWidth = this.line.width;
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
-            this.context.lineTo( points[ 3 ][ 0 ], points[ 3 ][ 1 ] );
-            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.stroke();
-            this.context.fill();
-
-            //bottom right
-            this.context.beginPath();
-            this.context.lineStyle = this.line.color;
-            this.context.fillStyle = '#eee';
-            this.context.lineWidth = this.line.width;
-            this.context.moveTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.lineTo( points[ 5 ][ 0 ], points[ 5 ][ 1 ] );
-            this.context.lineTo( points[ 4 ][ 0 ], points[ 4 ][ 1 ] );
-            this.context.lineTo( points[ 6 ][ 0 ], points[ 6 ][ 1 ] );
-            this.context.stroke();
-            this.context.fill();
-
-        }
         if ( 'function' === typeof this.ondraw ) {
             this.ondraw( { data: hex, api: new API( hex, this.canvas, this.context ) } );
         }
