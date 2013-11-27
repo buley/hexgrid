@@ -72,7 +72,6 @@ window.Hexgrid = (function() {
         this.yo = y;
     };
     Hexagon.prototype.draw = function( ctx, type, line_color, line_width) {
-
         var xo = this.xo, yo = this.yo, width = this.width;
         ctx.fillStyle = '#ffffff';
         ctx.lineStyle = line_color;
@@ -322,16 +321,13 @@ window.Hexgrid = (function() {
             ctx.clip();
             if ( 'undefined' !== typeof clipWidth ) {
                 //sliced images
-                log('1', clip);
                 //api.context.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
                 ctx.drawImage(img, xPt, yPt, width, height, clipX, clipY, clipWidth, clipHeight );
             } else if ( 'undefined' !== typeof width ) {
                 //scaled images
-                log('2');
                 //api.context.drawImage(img, x, y, width, height);
                 ctx.drawImage(img, xPt, yPt, width, height );
             } else {
-                log('3');
                 ctx.drawImage(img, xPt, yPt );
             }
 
@@ -357,7 +353,7 @@ window.Hexgrid = (function() {
         [ this.setup, this.create, this.draw ].forEach( function( fn ) { fn.apply( that, [] ); } );
     };
     Public.prototype.detect = function(e, handler) {
-        var clickX = e.clientX, clickY = e.clientY;
+        var clickX = e.clientX - e.target.offsetLeft, clickY = e.clientY - e.target.offsetTop;
         var x = 0, xlen = this.grid.length, row;
         for( ; x < xlen ; x += 1 ) {
             row = this.grid[ x ];
@@ -423,6 +419,8 @@ window.Hexgrid = (function() {
         this.canvas.style.height = this.node.clientHeight;
         this.bounds = this.canvas.getBoundingClientRect();
         this.model = { width: this.side };
+		this.yoffset = this.node.offsetTop;
+		this.xoffset = this.node.offsetLeft;
         var w = this.canvas.width - this.line_width;
         var h = this.canvas.height - this.line_width;
         this.rows = ( h - ( h % ( this.side * 1.5 ) ) ) / ( this.side * 1.5 );
