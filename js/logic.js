@@ -21,10 +21,14 @@ window.Hexgrid = (function() {
         return a * (Math.PI / 180);
     };
     Trig.dotProduct = function( a, b ) {
-        var n = 0, lim = Math.min(a.length,b.length);
-        for (var i = 0; i < lim; i++) n += a[i] * b[i];
+        var n = 0, lim = Math.min(a.length,b.length), i;
+        for ( i = 0; i < lim; i++ ) {
+			n += a[i] * b[i];
+		}
         return n;
     };
+
+	//TODO: implement for Trig.sameSide()
     Trig.crossProduct = function( a, b ) {
 
     };
@@ -71,9 +75,13 @@ window.Hexgrid = (function() {
         this.xo = x;
         this.yo = y;
     };
-    Hexagon.prototype.draw = function( ctx, type, line_color, line_width) {
+    Hexagon.prototype.draw = function( ctx, type, line_color, line_width, fill_color) {
+
         var xo = this.xo, yo = this.yo, width = this.width;
-        ctx.fillStyle = '#ffffff';
+        if ( 'string' !== typeof fill_color ) {
+			fill_color = 'transparent';
+        }
+		ctx.fillStyle = fill_color;
         ctx.lineStyle = line_color;
         ctx.lineWidth = line_width;
         ctx.beginPath();
@@ -281,13 +289,119 @@ window.Hexgrid = (function() {
         }
         return result;
     };
+
+	/* Neighbors */
+
+    var Neighbors = function(hexagon, canvas, context) {
+		this.hexagon = hexagon;
+        this.context = context;
+        this.canvas = canvas;
+		/* 6 neighbors */
+		var that = this
+		, results = []
+		, left = function (hex) {
+			return {
+				row: hex.row
+				, column: hex.column - 1
+			};
+		}
+		, right = function(hex) {
+			return {
+				row: hex.row
+				, column: hex.column + 1
+			};
+		}
+		, topRight = function(hex) {
+			if ( 0 !== ( hex.row % 2 ) ) {
+				return { 
+					row: hex.row - 1
+					, column: hex.column + 1
+				};
+			} else {
+				return { 
+					row: hex.row - 1
+					, column: hex.column
+				};
+			}
+		}
+		, bottomRight = function(hex) {
+			if ( 0 !== ( hex.row % 2 ) ) {
+				return { 
+					row: hex.row + 1
+					, column: hex.column + 1
+				};
+			} else {
+				return { 
+					row: hex.row + 1
+					, column: hex.column
+				};
+			}
+		}
+		, topLeft = function(hex) {
+			if ( 0 !== ( hex.row % 2 ) ) {
+				return {
+					row: hex.row - 1
+					, column: hex.column
+				};
+			} else {
+				return {
+					row: hex.row - 1
+					, column: hex.column - 1
+				};
+			}
+		}
+		, bottomLeft = function(hex) {
+			if ( 0 !== ( hex.row % 2 ) ) {
+				return { 
+					row: hex.row + 1
+					, column: hex.column
+				};
+			} else {
+				return { 
+					row: hex.row + 1
+					, column: hex.column - 1
+				};
+			}
+		}, PublicAPI = function( data, layers, idx ) {
+			var data = !!data ? data : []
+			, idx = ( 'undefined' === typeof idx || !idx ) ? 1 : idx
+			, layers = ( 'undefined' === typeof layers || !layers ) ? 3 : layers
+			, get_layer = function(hex) {
+					return [
+						left(hex)
+						, right(hex)
+						, topRight(hex)
+						, bottomRight(hex)
+						, topLeft(hex)
+						, bottomLeft(hex)
+					];
+			}, merge_layers = function( l1, l2 ) {
+					var x = 0, xlen = l2.length;
+					for ( ; x < xlen ; x += 1 ) {
+						l1.push( l2[ x ] );
+					}
+					return l1;
+			}, do_layer = function(dd, ll, ii, hex ) {
+					if ( !ii || ii > ll ) {
+						return dd;
+					} else if ( ii <= ll ) {
+						var d = merge_layers( dd, get_layer( hex ) );
+						return do_layer( d, ll, ii + 1, hex );
+					}
+			};
+			do_layer( [], layers, idx, that.hexagon);
+        };
+		return PublicAPI;
+    };
+
     /* API */
     var that = this;
     var API = function(hexagon, canvas, context) {
-      this.hexagon = hexagon;
+		this.hexagon = hexagon;
         this.context = context;
         this.canvas = canvas;
     };
+
     API.prototype.image = function( options ) {
         if ( 'undefined' === typeof options ) {
           return;
@@ -346,7 +460,13 @@ window.Hexgrid = (function() {
     var Public = function (args) {
         var attr;
         for ( attr in args ) { if ( args.hasOwnProperty( attr ) ) { this[ attr ] = args[ attr ]; } };
+		if ( 'string' === typeof this.fill ) {
+			this.fill = { color: this.fill };
+        }
         this.run();
+		if ( 'function' === typeof this.onready ) {
+			this.onready.apply( this, arguments );
+		}
     };
     Public.prototype.run = function() {
         var that = this;
@@ -450,6 +570,8 @@ window.Hexgrid = (function() {
                     yoffset = 0;
                 }
                 var hex = new Hexagon( width, xoffset, yoffset );
+				hex.row = row + 1;
+				hex.column = idx + 1;
                 hexagons.push( hex );
             }
             rows.push( hexagons );
@@ -482,14 +604,31 @@ window.Hexgrid = (function() {
         //this.box = ( Math.random() >.5 ) ? true : false;
         //this.threed = ( Math.random() > .7 ) ? true : false;
         var boxtype = 'normal';
-        hex.draw( this.context, boxtype, this.line.color, this.line.width );
-
+        hex.draw( this.context, boxtype, this.line.color, this.line.width, this.fill.color );
         if ( 'function' === typeof this.ondraw ) {
             this.ondraw( { data: hex, api: new API( hex, this.canvas, this.context ) } );
         }
 
     };
 
+    Public.prototype.get = function( args ) {
+		if ( !!args.row && !!args.column ) { 
+			var data = this.grid[ args.row - 1 ][ args.column - 1 ];
+			return {
+				row: args.row
+				, column: args.column
+				, data: data
+				, api: new API( data, this.canvas, this.context)
+				, neighbors: new Neighbors( data, this.canvas, this.context )
+			};
+		} else {
+			return this.grid;
+		}
+	};
+
+    Public.prototype.set = function( args ) {
+		console.log('set hex', args );
+	};
     Public.prototype.draw.added = false;
     return Public;
 })();
