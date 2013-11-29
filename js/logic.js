@@ -1,5 +1,8 @@
 window.Hexgrid = (function() {
     //config
+
+    var that = this;
+
     var id = 'hexgrid';
 
     var log = function() {
@@ -28,43 +31,26 @@ window.Hexgrid = (function() {
         return n;
     };
 
-	//TODO: implement for Trig.sameSide()
-    Trig.crossProduct = function( a, b ) {
-
-    };
-
     //Barycentric coordinate method
     //background: http://www.blackpawn.com/texts/pointinpoly/default.html
     //via http://koozdra.wordpress.com/2012/06/27/javascript-is-point-in-triangle/
     Trig.insideTriangle = function ( px, py, ax, ay, bx, by, cx, cy ) {
 
-        var v0 = [cx-ax,cy-ay];
-        var v1 = [bx-ax,by-ay];
-        var v2 = [px-ax,py-ay];
-
-        var dot00 = (v0[0]*v0[0]) + (v0[1]*v0[1]);
-        var dot01 = (v0[0]*v1[0]) + (v0[1]*v1[1]);
-        var dot02 = (v0[0]*v2[0]) + (v0[1]*v2[1]);
-        var dot11 = (v1[0]*v1[0]) + (v1[1]*v1[1]);
-        var dot12 = (v1[0]*v2[0]) + (v1[1]*v2[1]);
-
-        var invDenom = 1/ (dot00 * dot11 - dot01 * dot01);
-
-        var u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-        var v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+        var v0 = [ cx-ax, cy-ay ]
+			, v1 = [ bx-ax, by-ay ]
+			, v2 = [ px-ax, py-ay ]
+			, dot00 = ( v0[0] * v0[0] ) + ( v0[1] * v0[1] )
+			, dot01 = ( v0[0] * v1[0] ) + ( v0[1] * v1[1] )
+			, dot02 = ( v0[0] * v2[0] ) + ( v0[1] * v2[1] )
+			, dot11 = ( v1[0] * v1[0] ) + ( v1[1] * v1[1] )
+			, dot12 = ( v1[0] * v2[0] ) + ( v1[1] * v2[1] )
+			, invDenom = 1 / (dot00 * dot11 - dot01 * dot01)
+			, u = (dot11 * dot02 - dot01 * dot12) * invDenom
+			, v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
         return ((u >= 0) && (v >= 0) && (u + v < 1));
     }
 
-    Trig.sameSide = function( p1, p2, a, b ) {
-        cp1 = Trig.crossProduct( b - a, p1 - a );
-        cp2 = Trig.crossProduct( b - a, p2 - a );
-        if ( Trig.dotProduct( cp1, cp2 ) >= 0 ) {
-            return true;
-        } else {
-            return false;
-        }
-    };
 
     /* Hexagon */
     var _sin_60 = Math.sin( Trig.degreesToRadians( 60 ) );
@@ -75,6 +61,7 @@ window.Hexgrid = (function() {
         this.xo = x;
         this.yo = y;
     };
+
     Hexagon.prototype.draw = function( ctx, type, line_color, line_width, fill_color) {
 
         var xo = this.xo, yo = this.yo, width = this.width;
@@ -214,15 +201,27 @@ window.Hexgrid = (function() {
 
         }
     }
+
     Hexagon.prototype.xoffset = function() {
        return this.xo;
     };
+
     Hexagon.prototype.yoffset = function() {
        return this.yo;
     };
+
+	Hexagon.prototype.origin = function() {
+		return [ this.xoffset(), this.yoffset() ];
+	};
+
     Hexagon.prototype.width = function() {
        return 2 * this.c;
     };
+
+    Hexagon.prototype.height = function() {
+       return Hexagon.prototype.width.apply( this, arguments );
+    };
+	
     Hexagon.prototype.points = function() {
         return [
             this.one()
@@ -234,15 +233,32 @@ window.Hexgrid = (function() {
             , this.seven()
         ];
     };
+
     /*x,y*/
-    Hexagon.prototype.one = function() { return [ this.xo, hexround( this.yo + this.a + this.c ) ] };
-    Hexagon.prototype.two = function() { return [ this.xo, hexround( this.yo + this.a ) ] };
-    Hexagon.prototype.three = function() { return [ hexround( this.xo + this.b ), this.yo + 0  ] };
-    Hexagon.prototype.four = function() { return [ hexround( this.xo + ( 2 * this.b ) ), hexround( this.yo + this.a ) ]; };
-    Hexagon.prototype.five = function() { return [ hexround( this.xo + ( 2 * this.b ) ), hexround( this.yo + this.a + this.c ) ] };
-    Hexagon.prototype.six = function() { return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.c ) ) ]; };
-    Hexagon.prototype.seven = function() { return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.c - ( 2 * this.a ) ) ) ] };
-    Hexagon.prototype.eight = function() { return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.a ) ) ]; };
+    Hexagon.prototype.one = function() {
+		return [ this.xo, hexround( this.yo + this.a + this.c ) ];
+	};
+    Hexagon.prototype.two = function() {
+		return [ this.xo, hexround( this.yo + this.a ) ];
+	};
+    Hexagon.prototype.three = function() {
+		return [ hexround( this.xo + this.b ), this.yo + 0  ];
+	};
+    Hexagon.prototype.four = function() {
+		return [ hexround( this.xo + ( 2 * this.b ) ), hexround( this.yo + this.a ) ];
+	};
+    Hexagon.prototype.five = function() {
+		return [ hexround( this.xo + ( 2 * this.b ) ), hexround( this.yo + this.a + this.c ) ];
+	};
+    Hexagon.prototype.six = function() {
+		return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.c ) ) ];
+	};
+    Hexagon.prototype.seven = function() {
+		return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.c - ( 2 * this.a ) ) ) ];
+	};
+    Hexagon.prototype.eight = function() {
+		return [ hexround( this.xo + this.b ), hexround( this.yo + ( 2 * this.a ) ) ];
+	};
 
     //we know you've clicked inside
     //the hexagon if either 1) you've clicked in the main rectangle (easy)
@@ -292,11 +308,16 @@ window.Hexgrid = (function() {
 
 	/* Neighbors */
 
-    var Neighbors = function(hexagon, canvas, context) {
+    var Neighbors = function(hexagon, canvas, context, grid) {
+
 		this.hexagon = hexagon;
         this.context = context;
         this.canvas = canvas;
-		/* 6 neighbors */
+		this.grid = grid;
+
+		/* There are 6 neighbors to a hexagon (here in clockwise order):
+			top, top-right, right, bottom-right, bottom, bottom-left, left, top-left */
+
 		var that = this
 		, results = []
 		, left = function (hex) {
@@ -362,45 +383,300 @@ window.Hexgrid = (function() {
 					, column: hex.column - 1
 				};
 			}
-		}, PublicAPI = function( data, layers, idx ) {
+		}, PublicAPI = function( layers, data, idx ) {
 			var data = !!data ? data : []
 			, idx = ( 'undefined' === typeof idx || !idx ) ? 1 : idx
-			, layers = ( 'undefined' === typeof layers || !layers ) ? 3 : layers
-			, get_layer = function(hex) {
-					return [
-						left(hex)
-						, right(hex)
-						, topRight(hex)
-						, bottomRight(hex)
-						, topLeft(hex)
-						, bottomLeft(hex)
-					];
-			}, merge_layers = function( l1, l2 ) {
-					var x = 0, xlen = l2.length;
+			, layers = ( 'undefined' === typeof layers || !layers ) ? 1 : layers
+			, get_layer = function(hexes) {
+					var res = [], x = 0, xlen = hexes.length, hex;
+					for ( ; x < xlen; x += 1 ) {
+						hex = hexes[ x ];
+						res.push( [
+							left(hex)
+							, right(hex)
+							, topRight(hex)
+							, bottomRight(hex)
+							, topLeft(hex)
+							, bottomLeft(hex)
+						] );
+					}
+					return res;
+			}, merge_layers = function( l1, l2, dedupe ) {
+					var x = 0, xlen = l2.length, existing = {}, minc = Infinity, maxc = -(Infinity);
 					for ( ; x < xlen ; x += 1 ) {
-						l1.push( l2[ x ] );
+						var y = 0, ylen = l2[ x ].length;
+						for ( ; y < ylen ; y += 1 ) {
+							if ( true === dedupe ) {
+								var item =  l2[ x ][ y ];
+								if ( item.column > maxc ) {
+									maxc = item.column;
+								}
+								if ( item.column < minc ) {
+									minc = item.column;
+								}
+								var key = JSON.stringify( l2[ x ][ y ] );
+								if ( 'undefined' === typeof existing[ key ] ) {
+									existing[ key ] = true;
+									l1.push( l2[ x ][ y ] );
+								}
+							} else {
+								l1.push( l2[ x ][ y ] );
+							}
+						}
 					}
 					return l1;
-			}, do_layer = function(dd, ll, ii, hex ) {
+			}, do_layer = function(dd, ll, ii, hex, map ) {
+					map = map || [ [ hex ] ];
+					var collection = [], start = dd.slice(0), existing = [];	
 					if ( !ii || ii > ll ) {
-						return dd;
+						return { data: dd, layers: map, api: new NeighborsAPI( dd, map, that.canvas, that.context, ll, new API( hex, that.canvas, that.context, that.grid), hexagon ) };
 					} else if ( ii <= ll ) {
-						var d = merge_layers( dd, get_layer( hex ) );
-						return do_layer( d, ll, ii + 1, hex );
+						var d = merge_layers( dd, get_layer( map[ map.length - 1 ] ), true )
+							, x = 0
+							, xlen = d.length
+							, xitem
+							, old = false;
+						for( ; x < xlen ; x += 1 ) {
+							xitem = d[ x ];
+							old = false;
+							var z = 0
+								, zlen = start.length
+								, zitem;
+							for( ; z < zlen ; z += 1 ) {
+								var y = 0
+									, ylen = start.length
+									, yitem;
+								for( ; y < ylen ; y += 1 ) {
+									yitem = start[ y ];
+									if ( xitem.row === yitem.row && xitem.column === yitem.column ) {
+										old = true;
+										break;
+									}
+								}
+							}
+							if ( false === old ) {
+								collection.push( xitem );	
+							} else {
+								existing.push( xitem );
+							}
+						}
+						map.push( collection );
+						return do_layer( d, ll, ii + 1, hex, map );
 					}
 			};
-			do_layer( [], layers, idx, that.hexagon);
+			return do_layer( [], layers, idx, that.hexagon);
         };
 		return PublicAPI;
     };
 
+	var NeighborsAPI = function(neighbors, layers, canvas, context, layerct, hexapi, node) {
+		this.node = node;
+		this.depth = layerct;
+		this.neighbors = neighbors;
+		this.layers = layers;
+        this.context = context;
+        this.canvas = canvas;
+		this.api = hexapi;
+	};
+
+    NeighborsAPI.prototype.xoffset = function( options ) {
+		var origin = this.origin();
+		return origin[ 0 ];
+	};
+
+    NeighborsAPI.prototype.yoffset = function( options ) {
+		var origin = this.origin();
+		return origin[ 1 ];
+	};
+
+    NeighborsAPI.prototype.height = function() {
+		return this.width.apply( this, arguments );
+	};
+
+    NeighborsAPI.prototype.middle = function() {
+		return [ this.node.xo + this.node.width(), this.node.yo + ( this.node.width() / 2 ) ];
+	};
+
+    NeighborsAPI.prototype.origin = function() {
+		var middle = this.middle(), width = this.width();
+		return [ middle[ 0 ] - ( width / 2 ), middle[ 1 ] - ( width / 2 ) ]; 
+	};
+
+    NeighborsAPI.prototype.width = function( options ) {
+		/* Proof: if ( !this.fullWidth ) {
+			var layer = this.layers[ this.layers.length - 1 ];
+			var x = 0, xlen = layer.length, xitem, maxc = -Infinity, minc = Infinity, maxr = -Infinity, minr = Infinity;
+			for ( ; x < xlen; x += 1 ) {
+				xitem = layer[ x ];
+				console.log('xitem',xitem);
+				if ( xitem.column > maxc ) {
+					maxc = xitem.column;
+				}
+				if ( xitem.column < minc ) {
+					minc = xitem.column;
+				}
+				if ( xitem.row > maxr ) {
+					maxr = xitem.row;
+				}
+				if ( xitem.row < minr ) {
+					minr = xitem.row;
+				}
+			}
+			console.log('column width = 2 * depth', (maxc - minc));
+			console.log('row width = 2 * depth', (maxr - minr));
+		}*/
+		return this.depth * 2 * this.api.hexagon.width();
+	};
+
+    NeighborsAPI.prototype.image = function( options ) {
+		if ( 'undefined' === typeof options ) {
+          return;
+        }
+        var src = options.src
+            , xPt = options.x
+            , yPt = options.y
+            , width = options.width
+            , height = options.height
+            , clip = options.clip || {}
+            , clipX = clip.x
+            , clipY = clip.y
+            , clipWidth = clip.width
+            , clipHeight = clip.height;
+        var img = new Image();
+        img.src = src;
+        var api = this;
+        img.onload = function() {
+            //standard
+			var src_height = this.height
+				, src_width = this.width
+				, target_height = api.width()
+				, target_width = api.width()
+				, target_aspect = Math.min( target_width / src_width, target_height / src_height)
+				, transformed_height = target_aspect * src_height
+				, transformed_width = target_aspect * src_width
+				, transformed_width_padding = ( target_width - transformed_width ) / 2 
+				, width_padding = ( transformed_width_padding / target_width ) * src_width
+				, transformed_height_padding = ( target_height - transformed_height ) / 2
+				, height_padding = ( transformed_height_padding / target_height ) * src_height
+				, props = {
+					src_height: src_height
+					, src_width: src_width
+					, target_height: target_height
+					, target_width: target_width
+					, target_aspect: target_aspect
+					, transformed_height: transformed_height
+					, transformed_width: transformed_width
+					, transformed_width_padding: transformed_width_padding
+					, height_padding: height_padding
+					, width_padding: width_padding
+					, transformed_height_padding: transformed_height_padding
+				};
+			var a = 0, alen = api.layers.length, aitem;
+			for ( ; a < alen ; a += 1 ) {
+				aitem = api.layers[ a ];
+				var y = 0
+					, ylen = aitem.length
+					, yitem
+					, ctx = api.api.context;
+
+				for ( ; y < ylen ; y += 1 ) {
+					yitem = aitem[ y ];
+					var witem = api.api.grid[ yitem.row - 1 ]
+						, pts = []
+						, x = 1
+						, ptct = pts.length
+						, pt;
+					if ( 'undefined' !== typeof witem ) {
+						witem = witem[ yitem.column - 1 ]
+					} else {
+						continue;
+					}
+					if ( 'undefined' === typeof witem ) {
+						continue;	
+					}
+					if ( 'undefined' !== typeof witem.points ) {
+						pts = witem.points()
+					}
+					ctx.save();
+					ctx.beginPath();
+					ctx.moveTo( pts[ 0 ][ 0 ], pts[ 0 ][ 1 ] );
+					for ( ; x < 6 ; x += 1 ) {
+						pt = pts[ x ];
+						ctx.lineTo( pts[ x ][ 0 ], pts[ x ][ 1 ] );
+					}
+					ctx.closePath();
+					ctx.clip();
+
+					var neighborhood_origin = api.origin()
+						, neighborhood_width = api.width()
+						, neighborhood_height = api.height()
+						, neighborhood_x_start = neighborhood_origin[ 0 ]
+						, neighborhood_x_end = neighborhood_x_start + neighborhood_width
+						, hex_origin = witem.origin()
+						, hex_width = witem.width()
+						, hex_height = witem.height()
+						, x_start = hex_origin[ 0 ]
+						, x_end = x_start + hex_width
+						, x_start_percent = ( x_start - neighborhood_x_start ) / neighborhood_width
+						, x_end_percent = 1 - ( ( neighborhood_x_end - x_end ) / neighborhood_width )
+						, x_width_percent = x_end_percent - x_start_percent
+						, neighborhood_y_start = neighborhood_origin[ 1 ]
+						, neighborhood_y_end = neighborhood_y_start + neighborhood_width
+						, y_start = hex_origin[ 1 ]
+						, y_end = y_start + hex_height
+						, y_start_percent = ( y_start - neighborhood_y_start ) / neighborhood_height
+						, y_end_percent = 1 - ( ( neighborhood_y_end - y_end ) / neighborhood_height )
+						, y_width_percent = y_end_percent - y_start_percent
+						, origin = witem.origin();
+
+					//api.context.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+					ctx.drawImage(
+						img
+						, Math.floor( x_start_percent * props.src_width )
+						, Math.floor( y_start_percent * props.src_height )
+						, Math.floor( x_width_percent * props.src_width )
+						, Math.floor( y_width_percent * props.src_height )
+						, origin[ 0 ]
+						, origin[ 1 ]
+						, witem.width()
+						, witem.height()
+					);
+
+					ctx.restore();
+				}
+			}
+
+        };
+
+
+	};
+
     /* API */
-    var that = this;
-    var API = function(hexagon, canvas, context) {
+
+    var API = function(hexagon, canvas, context, grid) {
 		this.hexagon = hexagon;
         this.context = context;
         this.canvas = canvas;
+		this.grid = grid;
     };
+
+    API.prototype.get = function( args ) {
+		if ( !!args.row && !!args.column ) { 
+			if ( 'undefined' === typeof this.grid[ args.row - 1 ] ) {
+				return this.grid;
+			}
+			var data = this.grid[ args.row - 1 ][ args.column - 1 ], that = this;
+			return {
+				row: args.row
+				, column: args.column
+				, data: data
+				, api: new API( data, this.canvas, this.context, this.grid )
+				, neighbors: new Neighbors( data, this.canvas, this.context, this.grid )
+			};
+		} else {
+			return this.grid;
+		}
+	};
 
     API.prototype.image = function( options ) {
         if ( 'undefined' === typeof options ) {
@@ -613,13 +889,13 @@ window.Hexgrid = (function() {
 
     Public.prototype.get = function( args ) {
 		if ( !!args.row && !!args.column ) { 
-			var data = this.grid[ args.row - 1 ][ args.column - 1 ];
+			var data = this.grid[ args.row - 1 ][ args.column - 1 ], that = this;
 			return {
 				row: args.row
 				, column: args.column
 				, data: data
-				, api: new API( data, this.canvas, this.context)
-				, neighbors: new Neighbors( data, this.canvas, this.context )
+				, api: new API( data, this.canvas, this.context, this.grid )
+				, neighbors: new Neighbors( data, this.canvas, this.context, this.grid )
 			};
 		} else {
 			return this.grid;
