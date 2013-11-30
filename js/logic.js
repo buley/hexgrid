@@ -48,7 +48,7 @@ window.Hexgrid = (function() {
 			, u = (dot11 * dot02 - dot01 * dot12) * invDenom
 			, v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
-        return ((u >= 0) && (v >= 0) && (u + v < 1));
+        return ( ( u >= 0 ) && ( v >= 0 ) && ( u + v <  1 ) );
     }
 
 
@@ -391,6 +391,9 @@ window.Hexgrid = (function() {
 					var res = [], x = 0, xlen = hexes.length, hex;
 					for ( ; x < xlen; x += 1 ) {
 						hex = hexes[ x ];
+						if ( 'undefined' === typeof hex ) {
+							continue;
+						}
 						res.push( [
 							left(hex)
 							, right(hex)
@@ -402,19 +405,20 @@ window.Hexgrid = (function() {
 					}
 					return res;
 			}, merge_layers = function( l1, l2, dedupe ) {
-					var x = 0, xlen = l2.length, existing = {}, minc = Infinity, maxc = -(Infinity);
+					var x = 0, xlen = l2.length, existing = {}, minc = Infinity, maxc = -(Infinity), item, key, y, ylen;
 					for ( ; x < xlen ; x += 1 ) {
-						var y = 0, ylen = l2[ x ].length;
+						y = 0;
+						ylen = l2[ x ].length;
 						for ( ; y < ylen ; y += 1 ) {
 							if ( true === dedupe ) {
-								var item =  l2[ x ][ y ];
+								item =  l2[ x ][ y ];
 								if ( item.column > maxc ) {
 									maxc = item.column;
 								}
 								if ( item.column < minc ) {
 									minc = item.column;
 								}
-								var key = JSON.stringify( l2[ x ][ y ] );
+								key = JSON.stringify( l2[ x ][ y ] );
 								if ( 'undefined' === typeof existing[ key ] ) {
 									existing[ key ] = true;
 									l1.push( l2[ x ][ y ] );
@@ -456,8 +460,6 @@ window.Hexgrid = (function() {
 							}
 							if ( false === old ) {
 								collection.push( xitem );	
-							} else {
-								existing.push( xitem );
 							}
 						}
 						map.push( collection );
@@ -490,25 +492,11 @@ window.Hexgrid = (function() {
 	};
 
     NeighborsAPI.prototype.height = function() {
-		return this.width.apply( this, arguments );
-	};
-
-    NeighborsAPI.prototype.middle = function() {
-		return [ this.node.xo + this.node.width(), this.node.yo + ( this.node.width() / 2 ) ];
-	};
-
-    NeighborsAPI.prototype.origin = function() {
-		var middle = this.middle(), width = this.width();
-		return [ middle[ 0 ] - ( width / 2 ), middle[ 1 ] - ( width / 2 ) ]; 
-	};
-
-    NeighborsAPI.prototype.width = function( options ) {
-		/* Proof: if ( !this.fullWidth ) {
-			var layer = this.layers[ this.layers.length - 1 ];
+		if ( !this.coldepth || !this.rowdepth ) {
+			var layer = this.layers[ this.layers.length - 1 ], coldepth, rowdepth;
 			var x = 0, xlen = layer.length, xitem, maxc = -Infinity, minc = Infinity, maxr = -Infinity, minr = Infinity;
 			for ( ; x < xlen; x += 1 ) {
 				xitem = layer[ x ];
-				console.log('xitem',xitem);
 				if ( xitem.column > maxc ) {
 					maxc = xitem.column;
 				}
@@ -522,10 +510,50 @@ window.Hexgrid = (function() {
 					minr = xitem.row;
 				}
 			}
-			console.log('column width = 2 * depth', (maxc - minc));
-			console.log('row width = 2 * depth', (maxr - minr));
-		}*/
-		return this.depth * 2 * this.api.hexagon.width();
+			this.coldepth = (maxc - minc);
+			this.rowdepth = (maxr - minr);
+		}
+		if ( 'undefined' === typeof this.api.hexagon ) {
+			return;
+		}
+		return this.rowdepth * this.api.hexagon.width();
+	};
+
+    NeighborsAPI.prototype.middle = function() {
+		return [ this.node.xo + this.node.width(), this.node.yo + ( this.node.width() / 2 ) ];
+	};
+
+    NeighborsAPI.prototype.origin = function() {
+		var middle = this.middle(), width = this.width();
+		return [ middle[ 0 ] - ( width / 2 ), middle[ 1 ] - ( width / 2 ) ]; 
+	};
+
+    NeighborsAPI.prototype.width = function( options ) {
+		if ( !this.coldepth || !this.rowdepth ) {
+			var layer = this.layers[ this.layers.length - 1 ], coldepth, rowdepth;
+			var x = 0, xlen = layer.length, xitem, maxc = -Infinity, minc = Infinity, maxr = -Infinity, minr = Infinity;
+			for ( ; x < xlen; x += 1 ) {
+				xitem = layer[ x ];
+				if ( xitem.column > maxc ) {
+					maxc = xitem.column;
+				}
+				if ( xitem.column < minc ) {
+					minc = xitem.column;
+				}
+				if ( xitem.row > maxr ) {
+					maxr = xitem.row;
+				}
+				if ( xitem.row < minr ) {
+					minr = xitem.row;
+				}
+			}
+			this.coldepth = (maxc - minc);
+			this.rowdepth = (maxr - minr);
+		}
+		if ( 'undefined' === typeof this.api.hexagon ) {
+			return;
+		}
+		return this.coldepth * this.api.hexagon.width();
 	};
 
     NeighborsAPI.prototype.image = function( options ) {
@@ -554,10 +582,10 @@ window.Hexgrid = (function() {
 				, target_aspect = Math.min( target_width / src_width, target_height / src_height)
 				, transformed_height = target_aspect * src_height
 				, transformed_width = target_aspect * src_width
-				, transformed_width_padding = ( target_width - transformed_width ) / 2 
-				, width_padding = ( transformed_width_padding / target_width ) * src_width
-				, transformed_height_padding = ( target_height - transformed_height ) / 2
-				, height_padding = ( transformed_height_padding / target_height ) * src_height
+				, transformed_width_padding = ( target_width - transformed_width )
+				, width_padding = ( transformed_width_padding / target_aspect )
+				, transformed_height_padding = ( target_height - transformed_height )
+				, height_padding = ( transformed_height_padding / target_aspect )
 				, props = {
 					src_height: src_height
 					, src_width: src_width
@@ -581,6 +609,9 @@ window.Hexgrid = (function() {
 
 				for ( ; y < ylen ; y += 1 ) {
 					yitem = aitem[ y ];
+					if ( 'undefined' === typeof yitem ) {
+						continue;
+					}
 					var witem = api.api.grid[ yitem.row - 1 ]
 						, pts = []
 						, x = 1
@@ -617,25 +648,26 @@ window.Hexgrid = (function() {
 						, hex_height = witem.height()
 						, x_start = hex_origin[ 0 ]
 						, x_end = x_start + hex_width
-						, x_start_percent = ( x_start - neighborhood_x_start ) / neighborhood_width
-						, x_end_percent = 1 - ( ( neighborhood_x_end - x_end ) / neighborhood_width )
-						, x_width_percent = x_end_percent - x_start_percent
+						, x_start_percent = Math.abs( x_start - neighborhood_x_start ) / neighborhood_width
+						, x_end_percent = Math.abs( neighborhood_x_end - x_end ) / neighborhood_width
+						, x_width_percent = ( x_end - x_start ) / neighborhood_width
 						, neighborhood_y_start = neighborhood_origin[ 1 ]
 						, neighborhood_y_end = neighborhood_y_start + neighborhood_width
 						, y_start = hex_origin[ 1 ]
 						, y_end = y_start + hex_height
-						, y_start_percent = ( y_start - neighborhood_y_start ) / neighborhood_height
-						, y_end_percent = 1 - ( ( neighborhood_y_end - y_end ) / neighborhood_height )
-						, y_width_percent = y_end_percent - y_start_percent
+						, y_start_percent = Math.abs( y_start - neighborhood_y_start ) / neighborhood_height
+						, y_end_percent = Math.abs( neighborhood_y_end - y_end ) / neighborhood_height
+						, y_width_percent = Math.abs( y_end - y_start ) / neighborhood_height
 						, origin = witem.origin();
 
 					//api.context.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+
 					ctx.drawImage(
 						img
-						, Math.floor( x_start_percent * props.src_width )
-						, Math.floor( y_start_percent * props.src_height )
-						, Math.floor( x_width_percent * props.src_width )
-						, Math.floor( y_width_percent * props.src_height )
+						, Math.floor( x_start_percent * ( props.src_width ) )
+						, Math.floor( y_start_percent * ( props.src_height ) )
+						, Math.floor( x_width_percent * ( props.src_width ) )
+						, Math.floor( y_width_percent * ( props.src_height ) )
 						, origin[ 0 ]
 						, origin[ 1 ]
 						, witem.width()
@@ -889,7 +921,12 @@ window.Hexgrid = (function() {
 
     Public.prototype.get = function( args ) {
 		if ( !!args.row && !!args.column ) { 
-			var data = this.grid[ args.row - 1 ][ args.column - 1 ], that = this;
+			var data = this.grid[ args.row - 1 ], that = this;
+			if ( 'undefined' === typeof data ) {
+				return this.grid;
+			} else {
+				data = data[ args.column - 1 ];
+			}
 			return {
 				row: args.row
 				, column: args.column
