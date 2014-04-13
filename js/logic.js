@@ -781,8 +781,20 @@ window.Hexgrid = (function() {
         [ this.setup, this.create, this.draw ].forEach( function( fn ) { fn.apply( that, [] ); } );
     };
     Public.prototype.detect = function(e, handler) {
-        var clickX = e.clientX - e.target.offsetLeft, clickY = e.clientY - e.target.offsetTop;
-        var x = 0, xlen = this.grid.length, row;
+        var top = 0, left = 0,
+        element = e.target,
+            clickX,
+            clickY,
+            x = 0,
+            xlen = this.grid.length,
+            row;
+        do {
+            top += element.offsetTop  || 0;
+            left += element.offsetLeft || 0;
+            element = element.offsetParent;
+        } while(element);
+        clickX = e.clientX - left;
+        clickY = e.clientY - top;
         for( ; x < xlen ; x += 1 ) {
             row = this.grid[ x ];
             if ( clickY > row[0].yoffset() && clickY < row[0].yoffset() + row[0].width()  ) {
