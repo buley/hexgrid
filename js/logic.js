@@ -831,7 +831,7 @@ window.Hexgrid = (function() {
         this.detect(e, this.onmouseout);
     };
     Public.prototype.setup = function() {
-        this.node = document.getElementById( this.id );
+        this.node = this.node || document.getElementById( this.id );
         if ( ! Public.prototype.setup.added  ) {
             this.canvas = document.createElement( 'canvas' );
             this.context = this.canvas.getContext( '2d' );
