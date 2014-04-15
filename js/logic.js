@@ -685,11 +685,83 @@ window.Hexgrid = (function() {
 
     /* API */
 
+    var imageCacheStash = {},
+        //TODO: Time based clean out
+        imageCache = function(src, scale, frame_width, frame_height, callback) {
+            var key = [src,'-',scale.toFixed(4)].join('-');
+            if (!!imageCacheStash[key]) {
+                if (true !== imageCacheStash[key].waiting) {
+                    callback(imageCacheStash[key]);
+                    return 0;
+                } else {
+                    return imageCacheStash[key].callbacks.push(callback);
+                }
+            }
+            imageCacheStash[key] = { src: src, waiting: true, reference: img, callbacks: [ callback ] };
+            var img = new Image();
+            img.addEventListener('load', function() {
+                var callbacks = [],
+                    shadow,
+                    shadow_ctx,
+                    shadow_height,
+                    shadow_width;
+                delete imageCacheStash[key].waiting;
+                imageCacheStash[key].height = this.height;
+                imageCacheStash[key].reference = this;
+                imageCacheStash[key].width = this.width;
+                if ( 'undefined' !== typeof scale && 1 !== scale && null !== scale ) {
+                    shadow = document.createElement('canvas'),
+                    shadow_ctx = shadow.getContext('2d');
+                    shadow_height = Math.floor(this.height * scale);
+                    shadow_width = Math.floor(this.width * scale);
+                    var offsetx = 0,
+                        offsety = 0;
+                    if ( frame_width && shadow_width < frame_width ) {
+                        offsetx = Math.floor( ( frame_width - shadow_width ) / 2 );
+                    }
+                    if ( frame_height && shadow_height < frame_height ) {
+                        offsety = Math.floor( ( frame_height - shadow_height ) / 2 );
+                    }
+                    imageCacheStash[key].height = shadow_height + offsety;
+                    imageCacheStash[key].width = shadow_width + offsetx;
+                    shadow.height = imageCacheStash[key].height;
+                    shadow.width = imageCacheStash[key].width;
+                    shadow_ctx.drawImage(img, 0 + offsetx, 0 + offsety, shadow_width, shadow_height);
+                    imageCacheStash[key].reference = shadow;
+                    document.getElementsByTagName('body')[0].appendChild(shadow);
+                }
+                callbacks = imageCacheStash[key].callbacks;
+                delete imageCacheStash[key].callbacks;
+                callbacks.map(function(callback) {
+                    if( 'function' === typeof callback) {
+                        callback(imageCacheStash[key]);
+                    }
+                });
+            });
+            img.src = src;
+        };
+
     var API = function(hexagon, canvas, context, grid) {
 		this.hexagon = hexagon;
         this.context = context;
         this.canvas = canvas;
 		this.grid = grid;
+    };
+
+    API.prototype.tall = function() {
+        return (!!this.grid) ? this.grid.length : 0;
+    };
+
+    API.prototype.wide = function() {
+        return (!!this.grid) ? this.grid[0].length : 0;
+    };
+    
+    API.prototype.width = function() {
+        return (!!this.canvas) ? this.canvas.width : 0;
+    };
+
+    API.prototype.height = function() {
+        return (!!this.canvas) ? this.canvas.height : 0;
     };
 
     API.prototype.get = function( args ) {
@@ -723,15 +795,18 @@ window.Hexgrid = (function() {
             , clipX = clip.x
             , clipY = clip.y
             , clipWidth = clip.width
-            , clipHeight = clip.height;
-        var img = new Image();
-        img.src = src;
-        var api = this;
-        img.onload = function() {
-            //standard
-            var ctx = api.context;
-            var pts = api.hexagon.points(), x = 1, ptct = pts.length, pt;
-
+            , clipHeight = clip.height
+            , scale = options.scale || 1
+            , frame_width = options.frame ? options.frame.width : null
+            , frame_height = options.frame ? options.frame.height : null
+            , api = this;
+        imageCache(src, scale, frame_width, frame_height, function(response) {
+            var ctx = api.context,
+                img = response.reference,
+                pts = api.hexagon.points(),
+                x = 1,
+                ptct = pts.length,
+                pt;
             ctx.save();
             ctx.beginPath();
             ctx.moveTo( pts[ 0 ][ 0 ], pts[ 0 ][ 1 ] );
@@ -744,18 +819,17 @@ window.Hexgrid = (function() {
             if ( 'undefined' !== typeof clipWidth ) {
                 //sliced images
                 //api.context.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-                ctx.drawImage(img, xPt, yPt, width, height, clipX, clipY, clipWidth, clipHeight );
-            } else if ( 'undefined' !== typeof width ) {
+                ctx.drawImage(img, xPt, yPt, width, height, clipX, clipY, clipWidth, clipHeight);
+            } else if ('undefined' !== typeof width) {
                 //scaled images
                 //api.context.drawImage(img, x, y, width, height);
                 ctx.drawImage(img, xPt, yPt, width, height );
             } else {
                 ctx.drawImage(img, xPt, yPt );
             }
-
             ctx.restore();
 
-        };
+        });
 
     };
     API.prototype.video = function( src, resize ) {
@@ -781,8 +855,9 @@ window.Hexgrid = (function() {
         [ this.setup, this.create, this.draw ].forEach( function( fn ) { fn.apply( that, [] ); } );
     };
     Public.prototype.detect = function(e, handler) {
-        var top = 0, left = 0,
-        element = e.target,
+        var top = 0,
+            left = 0,
+            element = e.target,
             clickX,
             clickY,
             x = 0,
@@ -865,22 +940,29 @@ window.Hexgrid = (function() {
         var h = this.canvas.height - this.line_width;
         this.rows = ( h - ( h % ( this.side * 1.5 ) ) ) / ( this.side * 1.5 );
         this.count = ( ( w - ( 1 * this.side ) ) - ( ( w - ( 1 * this.side ) ) % ( this.side * 1.75 ) ) ) / ( this.side * 1.75 );
+        if( ( this.rows * this.side ) < this.node.clientHeight ) {
+            this.yoffset += ( this.node.clientHeight - ( this.rows * ( this.side * 1.5 ) ) ) / 2;
+        }
+        if( ( this.count * this.side ) < this.node.clientWidth ) {
+            this.xoffset += ( this.node.clientWidth - ( this.count * ( this.side * 1.75 ) ) ) / 2;
+        }
     };
+
     Public.prototype.setup.added = false;
 
     Public.prototype.create = function() {
         var row = 0, idx, hexagons, hexagon, rows = [], width = this.model.width;
         for ( ; row < this.rows ; row += 1 ) {
             hexagons = [];
-            var yoffset = (1.5 * this.model.width ) * ( row - 1 );
+            var yoffset = this.yoffset + ( (1.5 * this.model.width ) * ( row - 1 ) );
             for ( idx = 0; idx < this.count ; idx += 1 ) {
                 var xoffset;
                 if ( row ) {
                     if ( 0 === row % 2 ) {
                         //xoffset = 0;
-                        xoffset = .5 * ( 1.75 * this.model.width ) + ( idx * ( 1.75 * this.model.width ) );
+                        xoffset = this.xoffset + ( .5 * ( 1.75 * this.model.width ) + ( idx * ( 1.75 * this.model.width ) ) );
                     } else {
-                        xoffset = idx * ( 1.75 * this.model.width );
+                        xoffset = this.xoffset + ( idx * ( 1.75 * this.model.width ) );
                     }
                 }
                 if ('undefined' === typeof xoffset || xoffset < 0 ) {
@@ -926,7 +1008,7 @@ window.Hexgrid = (function() {
         var boxtype = 'normal';
         hex.draw( this.context, boxtype, this.line.color, this.line.width, this.fill.color );
         if ( 'function' === typeof this.ondraw ) {
-            this.ondraw( { data: hex, api: new API( hex, this.canvas, this.context ) } );
+            this.ondraw( { data: hex, api: new API( hex, this.canvas, this.context, this.grid ) } );
         }
 
     };
