@@ -62,7 +62,7 @@ window.Hexgrid = (function() {
         this.yo = y;
     };
 
-    Hexagon.prototype.draw = function( ctx, type, line_color, line_width, fill_color) {
+    Hexagon.prototype.draw = function( ctx, type, line_color, line_width, fill_color, do_stroke) {
 
         var xo = this.xo, yo = this.yo, width = this.width;
         if ( 'string' !== typeof fill_color ) {
@@ -80,7 +80,9 @@ window.Hexgrid = (function() {
         }
         ctx.closePath();
         ctx.fill();
-        ctx.stroke();
+        if ( true === do_stroke) {
+            ctx.stroke();
+        }
 
         if ( 'box' === type ) {
 
@@ -728,7 +730,6 @@ window.Hexgrid = (function() {
                     shadow.width = imageCacheStash[key].width;
                     shadow_ctx.drawImage(img, 0 + offsetx, 0 + offsety, shadow_width, shadow_height);
                     imageCacheStash[key].reference = shadow;
-                    document.getElementsByTagName('body')[0].appendChild(shadow);
                 }
                 callbacks = imageCacheStash[key].callbacks;
                 delete imageCacheStash[key].callbacks;
