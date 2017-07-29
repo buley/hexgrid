@@ -1,7 +1,7 @@
 {
   "name": "seis",
-  "version": "1.0.0",
-  "main": "js/hexgrid.js",
+  "version": "1.0.1",
+  "main": "index.js",
   "repository": "git@github.com:buley/hexgrid.git",
   "author": "Taylor Buley <buley@outlook.com>",
   "license": "MIT"
