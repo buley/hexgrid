@@ -1,4 +1,4 @@
-window.Hexgrid = (function() {
+var Hexgrid = (function() {
     //config
 
     var that = this;
@@ -1040,3 +1040,5 @@ window.Hexgrid = (function() {
     Public.prototype.draw.added = false;
     return Public;
 })();
+
+module.exports = Hexgrid;
